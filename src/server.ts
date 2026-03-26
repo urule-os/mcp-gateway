@@ -4,6 +4,7 @@ import { ToolCatalog } from './services/tool-catalog.js';
 import { serversRoutes } from './routes/servers.routes.js';
 import { bindingsRoutes } from './routes/bindings.routes.js';
 import { toolsRoutes } from './routes/tools.routes.js';
+import { authMiddleware } from '@urule/auth-middleware';
 import { errorHandler } from './middleware/error-handler.js';
 import type { Config } from './config.js';
 
@@ -14,6 +15,9 @@ export async function buildServer(config: Config) {
   });
 
   app.setErrorHandler(errorHandler);
+
+  // Auth middleware
+  await app.register(authMiddleware, { publicRoutes: ['/healthz'] });
 
   // Health check
   app.get('/healthz', async () => ({ status: 'ok', service: config.serviceName }));
