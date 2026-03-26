@@ -1,6 +1,17 @@
 import type { FastifyInstance } from 'fastify';
 import type { ServerRegistry } from '../services/server-registry.js';
 import type { ToolCatalog } from '../services/tool-catalog.js';
+import { z } from 'zod';
+
+// -- Zod Schemas ------------------------------------------------------
+
+const createBindingSchema = z.object({
+  workspaceId: z.string(),
+  serverId: z.string(),
+  config: z.object({}).passthrough().optional(),
+});
+
+// -- Routes -----------------------------------------------------------
 
 export async function bindingsRoutes(
   app: FastifyInstance,
@@ -12,11 +23,15 @@ export async function bindingsRoutes(
   app.post<{
     Body: { workspaceId: string; serverId: string; config?: Record<string, unknown> };
   }>('/api/v1/mcp/bindings', async (request, reply) => {
+    const parsed = createBindingSchema.safeParse(request.body);
+    if (!parsed.success) {
+      return reply.code(400).send({ error: 'Validation failed', details: parsed.error.issues });
+    }
     try {
       const binding = registry.bindToWorkspace(
-        request.body.serverId,
-        request.body.workspaceId,
-        request.body.config,
+        parsed.data.serverId,
+        parsed.data.workspaceId,
+        parsed.data.config,
       );
       reply.status(201).send(binding);
     } catch (err) {
