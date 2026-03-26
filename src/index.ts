@@ -1,8 +1,9 @@
-import { loadConfig } from './config.js';
+import { loadConfig, validateConfig } from './config.js';
 import { buildServer } from './server.js';
 
 async function main() {
   const config = loadConfig();
+  validateConfig(config);
   const server = await buildServer(config);
 
   try {

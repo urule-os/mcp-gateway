@@ -1,4 +1,5 @@
 import Fastify from 'fastify';
+import rateLimit from '@fastify/rate-limit';
 import { ServerRegistry } from './services/server-registry.js';
 import { ToolCatalog } from './services/tool-catalog.js';
 import { serversRoutes } from './routes/servers.routes.js';
@@ -15,6 +16,12 @@ export async function buildServer(config: Config) {
   });
 
   app.setErrorHandler(errorHandler);
+
+  // Rate limiting
+  await app.register(rateLimit, {
+    max: 100,
+    timeWindow: '1 minute',
+  });
 
   // Auth middleware
   await app.register(authMiddleware, { publicRoutes: ['/healthz'] });
