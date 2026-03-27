@@ -1,5 +1,7 @@
 import Fastify from 'fastify';
 import rateLimit from '@fastify/rate-limit';
+import swagger from '@fastify/swagger';
+import swaggerUi from '@fastify/swagger-ui';
 import { ServerRegistry } from './services/server-registry.js';
 import { ToolCatalog } from './services/tool-catalog.js';
 import { serversRoutes } from './routes/servers.routes.js';
@@ -36,7 +38,24 @@ export async function buildServer(config: Config) {
   });
 
   // Auth middleware
-  await app.register(authMiddleware, { publicRoutes: ['/healthz'] });
+  await app.register(authMiddleware, { publicRoutes: ['/healthz', '/docs'] });
+
+  // OpenAPI documentation
+  await app.register(swagger, {
+    openapi: {
+      info: {
+        title: 'Urule MCP Gateway API',
+        description: 'MCP server registry, workspace bindings, and tool catalog',
+        version: '0.1.0',
+      },
+      servers: [{ url: 'http://localhost:3005' }],
+      tags: [{ name: 'servers' }, { name: 'bindings' }, { name: 'tools' }],
+    },
+  });
+
+  await app.register(swaggerUi, {
+    routePrefix: '/docs',
+  });
 
   // Health check
   app.get('/healthz', async () => ({ status: 'ok', service: config.serviceName }));
