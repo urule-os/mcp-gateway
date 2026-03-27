@@ -2,7 +2,7 @@
 
 MCP server registry with workspace bindings and tool catalog.
 
-Part of the [Urule](https://github.com/urule-os/urule) ecosystem.
+Part of the [Urule](https://github.com/urule-os/urule) ecosystem — the open-source coordination layer for AI agents.
 
 ## Features
 
