@@ -9,6 +9,7 @@ import { serversRoutes } from './routes/servers.routes.js';
 import { bindingsRoutes } from './routes/bindings.routes.js';
 import { toolsRoutes } from './routes/tools.routes.js';
 import { authMiddleware } from '@urule/auth-middleware';
+import { correlationIdPlugin } from '@urule/correlation-id';
 import { errorHandler } from './middleware/error-handler.js';
 import type { Config } from './config.js';
 
@@ -27,10 +28,12 @@ export async function buildServer(config: Config) {
         },
       },
     },
-    genReqId: () => crypto.randomUUID(),
   });
 
   app.setErrorHandler(errorHandler);
+
+  // Correlation ID — must be the first plugin so all other middleware logs carry it
+  await app.register(correlationIdPlugin);
 
   // Register CORS
   const allowedOrigins = (process.env['CORS_ORIGINS'] ?? 'http://localhost:3000').split(',');
