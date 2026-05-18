@@ -105,6 +105,10 @@ export class ServerRegistry {
     return binding;
   }
 
+  getBinding(bindingId: string): WorkspaceBinding | undefined {
+    return this.bindings.get(bindingId);
+  }
+
   unbindFromWorkspace(bindingId: string): boolean {
     const binding = this.bindings.get(bindingId);
     if (!binding) return false;

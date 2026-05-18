@@ -4,8 +4,8 @@
 #     context: ../../..
 #     dockerfile: mcp-gateway/Dockerfile
 #
-# Workspace deps (@urule/auth-middleware, @urule/correlation-id,
-# @urule/events, @urule/observability) are referenced as `file:..` paths in
+# Workspace deps (@urule/auth-middleware, @urule/authz, @urule/authz-middleware,
+# @urule/correlation-id, @urule/events, @urule/observability) are `file:..` paths in
 # package.json and resolved here via copies into the build context. Caller is
 # expected to have run `npm --prefix urule run build:all` so the consumed
 # dist/ directories are populated before `docker compose build`.
@@ -14,6 +14,10 @@ FROM node:20-slim AS builder
 WORKDIR /app
 COPY urule/packages/auth-middleware/package.json urule/packages/auth-middleware/package.json
 COPY urule/packages/auth-middleware/dist urule/packages/auth-middleware/dist
+COPY urule/packages/authz/package.json urule/packages/authz/package.json
+COPY urule/packages/authz/dist urule/packages/authz/dist
+COPY urule/packages/authz-middleware/package.json urule/packages/authz-middleware/package.json
+COPY urule/packages/authz-middleware/dist urule/packages/authz-middleware/dist
 COPY urule/packages/correlation-id/package.json urule/packages/correlation-id/package.json
 COPY urule/packages/correlation-id/dist urule/packages/correlation-id/dist
 COPY urule/packages/events/package.json urule/packages/events/package.json
@@ -40,6 +44,10 @@ WORKDIR /app
 ENV NODE_ENV=production
 COPY urule/packages/auth-middleware/package.json urule/packages/auth-middleware/package.json
 COPY urule/packages/auth-middleware/dist urule/packages/auth-middleware/dist
+COPY urule/packages/authz/package.json urule/packages/authz/package.json
+COPY urule/packages/authz/dist urule/packages/authz/dist
+COPY urule/packages/authz-middleware/package.json urule/packages/authz-middleware/package.json
+COPY urule/packages/authz-middleware/dist urule/packages/authz-middleware/dist
 COPY urule/packages/correlation-id/package.json urule/packages/correlation-id/package.json
 COPY urule/packages/correlation-id/dist urule/packages/correlation-id/dist
 COPY urule/packages/events/package.json urule/packages/events/package.json

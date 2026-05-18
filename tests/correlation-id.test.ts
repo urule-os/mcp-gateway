@@ -8,6 +8,8 @@ describe('mcp-gateway — x-correlation-id propagation via real buildServer', ()
     databaseUrl: 'postgres://fake:fake@127.0.0.1:1/fake',
     natsUrl: 'nats://127.0.0.1:1',
     serviceName: 'mcp-gateway-test',
+    openfgaUrl: '',
+    openfgaStoreId: '',
   };
 
   it('echoes the inbound x-correlation-id header on the response', async () => {

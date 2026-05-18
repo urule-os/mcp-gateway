@@ -57,6 +57,8 @@ describe('mcp-gateway — CORS lockdown via real buildServer + CORS_ORIGINS env'
     databaseUrl: 'postgres://fake:fake@127.0.0.1:1/fake',
     natsUrl: 'nats://127.0.0.1:1',
     serviceName: 'mcp-gateway-test',
+    openfgaUrl: '',
+    openfgaStoreId: '',
   };
 
   async function buildAppWithCorsOrigins(origins: string | undefined) {
