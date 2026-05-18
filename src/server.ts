@@ -3,12 +3,20 @@ import cors from '@fastify/cors';
 import rateLimit from '@fastify/rate-limit';
 import swagger from '@fastify/swagger';
 import swaggerUi from '@fastify/swagger-ui';
+import {
+  jsonSchemaTransform,
+  serializerCompiler,
+  validatorCompiler,
+  type ZodTypeProvider,
+} from 'fastify-type-provider-zod';
 import { ServerRegistry } from './services/server-registry.js';
 import { ToolCatalog } from './services/tool-catalog.js';
 import { serversRoutes } from './routes/servers.routes.js';
 import { bindingsRoutes } from './routes/bindings.routes.js';
 import { toolsRoutes } from './routes/tools.routes.js';
 import { authMiddleware } from '@urule/auth-middleware';
+import { bootstrapAuthzClient } from '@urule/authz';
+import { authzMiddleware } from '@urule/authz-middleware';
 import { correlationIdPlugin } from '@urule/correlation-id';
 import { metricsPlugin } from '@urule/observability';
 import { errorHandler } from './middleware/error-handler.js';
@@ -29,7 +37,10 @@ export async function buildServer(config: Config) {
         },
       },
     },
-  });
+  }).withTypeProvider<ZodTypeProvider>();
+
+  app.setValidatorCompiler(validatorCompiler);
+  app.setSerializerCompiler(serializerCompiler);
 
   app.setErrorHandler(errorHandler);
 
@@ -52,7 +63,16 @@ export async function buildServer(config: Config) {
   // Auth middleware
   await app.register(authMiddleware, { publicRoutes: ['/healthz', '/metrics', '/docs'] });
 
-  // OpenAPI documentation
+  // Resource-level authz — decorates request.authz with an OpenFGA-backed
+  // AuthzClient. Must come AFTER authMiddleware so request.uruleUser exists.
+  const authzClient = await bootstrapAuthzClient(config, app.log);
+  await app.register(authzMiddleware, { authzClient });
+
+  // OpenAPI documentation. Tag descriptions surface in swagger-ui as
+  // section headers; per-route tags / summaries / descriptions live in
+  // each route's `schema:` field. `jsonSchemaTransform` from
+  // fastify-type-provider-zod converts the per-route Zod schemas into
+  // valid JSON Schema for the spec.
   await app.register(swagger, {
     openapi: {
       info: {
@@ -61,8 +81,13 @@ export async function buildServer(config: Config) {
         version: '0.1.0',
       },
       servers: [{ url: 'http://localhost:3005' }],
-      tags: [{ name: 'servers' }, { name: 'bindings' }, { name: 'tools' }],
+      tags: [
+        { name: 'servers', description: 'Register, list, and remove MCP servers + their tool inventories.' },
+        { name: 'bindings', description: 'Bind MCP servers to workspaces and inspect what is exposed there.' },
+        { name: 'tools', description: 'Browse + look up the tool catalog aggregated across MCP servers.' },
+      ],
     },
+    transform: jsonSchemaTransform,
   });
 
   await app.register(swaggerUi, {
